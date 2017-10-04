@@ -9,13 +9,24 @@
 #include "PIT.h"
 
 /**Flag of the Interrupt Status **/
-uint8 intrFlag = 0;
+uint8 intrFlag0=0;
+uint8 intrFlag1=0;
+uint8 intrFlag2=0;
+
 
 uint8 PIT_interruptFlagStatus(void);
 
-uint8 PIT_getIntrStutus(void){
+uint8 PIT_getIntrStutus0(void){
 	/**This function returns the value of the flag calculated in previus functions**/
-	return intrFlag;
+	return intrFlag0;
+}
+uint8 PIT_getIntrStutus1(void){
+	/**This function returns the value of the flag calculated in previus functions**/
+	return intrFlag1;
+}
+uint8 PIT_getIntrStutus2(void){
+	/**This function returns the value of the flag calculated in previus functions**/
+	return intrFlag2;
 }
 
 void PIT0_IRQHandler(void){
@@ -31,11 +42,10 @@ void PIT0_IRQHandler(void){
 	PIT->CHANNEL[0].TCTRL &= ~(PIT_TCTRL_TEN_MASK);
 	/**Enable timer 0 **/
 	PIT->CHANNEL[0].TCTRL &= ~(PIT_TCTRL_TIE_MASK);
-	/**Changes flag to continue with the process**/
-	intrFlag = TRUE;
+	/**Changes flag to continuo with the proccess**/
+	intrFlag0 = TRUE;
 
 }
-
 void PIT1_IRQHandler(void){
 	/**Dummy variable to read the control register**/
 	uint32 dummy;
@@ -49,11 +59,10 @@ void PIT1_IRQHandler(void){
 	PIT->CHANNEL[1].TCTRL &= ~(PIT_TCTRL_TEN_MASK);
 	/**Enable timer 0 **/
 	PIT->CHANNEL[1].TCTRL &= ~(PIT_TCTRL_TIE_MASK);
-	/**Changes flag to continue with the process**/
-	intrFlag = TRUE;
+	/**Changes flag to continuo with the proccess**/
+	intrFlag1 = TRUE;
 
 }
-
 void PIT2_IRQHandler(void){
 	/**Dummy variable to read the control register**/
 	uint32 dummy;
@@ -67,29 +76,10 @@ void PIT2_IRQHandler(void){
 	PIT->CHANNEL[2].TCTRL &= ~(PIT_TCTRL_TEN_MASK);
 	/**Enable timer 0 **/
 	PIT->CHANNEL[2].TCTRL &= ~(PIT_TCTRL_TIE_MASK);
-	/**Changes flag to continue with the process**/
-	intrFlag = TRUE;
+	/**Changes flag to continuo with the proccess**/
+	intrFlag2 = TRUE;
 
 }
-
-void PIT3_IRQHandler(void){
-	/**Dummy variable to read the control register**/
-	uint32 dummy;
-
-	/**Clean the flag **/
-	PIT->CHANNEL[3].TFLG |= PIT_TFLG_TIF_MASK;
-	/**Read the timer **/
-	dummy = PIT->CHANNEL[3].TCTRL;
-	PIT->CHANNEL[3].TCTRL;
-	/**Enables Pit Timer Interrupt **/
-	PIT->CHANNEL[3].TCTRL &= ~(PIT_TCTRL_TEN_MASK);
-	/**Enable timer 0 **/
-	PIT->CHANNEL[3].TCTRL &= ~(PIT_TCTRL_TIE_MASK);
-	/**Changes flag to continue with the process**/
-	intrFlag = TRUE;
-
-}
-
 void PIT_delay(PIT_Timer_t pitTimer,float systemClock ,float perior){
 	/**Float variables to calculate the cycles **/
 	float clockPeriod;
@@ -97,7 +87,7 @@ void PIT_delay(PIT_Timer_t pitTimer,float systemClock ,float perior){
 	float cyclesLDVAL;
 
 	/**Value of period of systemClock **/
-	clockPeriod = (1/(systemClock/2));
+	clockPeriod = (1/(systemClock));
 	/**Value of cycles necessary to assign to the PIT **/
 	cycles = perior/clockPeriod;
 	/**Rests 1 because starts at 0**/
@@ -111,7 +101,15 @@ void PIT_delay(PIT_Timer_t pitTimer,float systemClock ,float perior){
 	PIT->CHANNEL[pitTimer].TCTRL |= PIT_TCTRL_TEN_MASK;
 
 	/**Changes the flag to continue with loop **/
-	intrFlag = FALSE;
+	if(pitTimer==0){
+		intrFlag0=FALSE;
+	}
+	if(pitTimer==1){
+			intrFlag1=FALSE;
+		}
+	if(pitTimer==2){
+			intrFlag2=FALSE;
+		}
 
 }
 
@@ -122,8 +120,25 @@ void PIT_clockGating(void){
 
 void PIT_clear(void){
 	/**Changes the flag to continue with the loop in main**/
-	intrFlag = TRUE;
+	intrFlag0 =TRUE;
+	intrFlag1=TRUE;
+	intrFlag2=TRUE;
 }
+void PIT_clearSelect(PIT_Timer_t pitTimer){
+	if(pitTimer==0){
+		intrFlag0 =TRUE;
+	}
+	if(pitTimer==1){
+		intrFlag1=TRUE;
+		}
+	if(pitTimer==2){
+		intrFlag2=TRUE;
+		}
+	/*if(pitTimer==3){
+
+		}*/
+}
+
 
 
 

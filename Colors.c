@@ -9,130 +9,114 @@
 #include "DataTypeDefinitions.h"
 #include "MK64F12.h"
 #include "GPIO.h"
+#include "PIT.h"
 
-#define K 1000000 //Long delay
-#define W 65000		//Short delay
+#define SYSTEM_CLOCK 21000000
+#define DELAY_LONG 0.05F
+#define DELAY_SHORT 0.02F
 
+#define L 1000000
+#define S 65000
 
 void setAllRGB(){
-	SIM->SCGC5 = 0x2E00;
+	//GPIO_clockGating(GPIO_B);
+	//GPIO_clockGating(GPIO_E);
 
-	//LEDS
-	PORTB->PCR[21]= 0x00000100;
-	PORTB->PCR[22]= 0x00000100;
-	PORTE->PCR[26]= 0x00000100;
+	GPIO_pinControlRegisterType pinControlRegisterPortB = GPIO_MUX1;
+	GPIO_pinControlRegisterType pinControlRegisterPortE = GPIO_MUX1;
 
-	//Assign the values to the GPIO
+	GPIO_pinControlRegister(GPIO_B,BIT21,&pinControlRegisterPortB);
+	GPIO_pinControlRegister(GPIO_B,BIT22,&pinControlRegisterPortB);
+	GPIO_pinControlRegister(GPIO_E,BIT26,&pinControlRegisterPortE);
 
-	GPIOB->PDOR = 0x00200000;
- 	GPIOB->PDOR |= 0x00400000;
-	GPIOE->PDOR = 0x04000000;
+	/**Led Blue**/
+	GPIO_writePORT(GPIO_B,BIT21);
+	/**Led Red**/
+	GPIO_writePORT(GPIO_B,BIT22);
+	/**Led Green**/
+	GPIO_writePORT(GPIO_E,BIT26);
 
-
-	//Configures the GPIO as output
-	GPIOB->PDDR = 0x00200000;
-	GPIOB->PDDR |= 0x00400000;
-	GPIOE->PDDR = 0x04000000;
+	GPIO_dataDirectionPIN(GPIO_B,GPIO_OUTPUT,BIT21);
+	GPIO_dataDirectionPIN(GPIO_B,GPIO_OUTPUT,BIT22);
+	GPIO_dataDirectionPIN(GPIO_E,GPIO_OUTPUT,BIT26);
 
 }
 
 void clearAllRGB(){
 	GPIO_setPIN(GPIO_B, BIT21);
 	GPIO_setPIN(GPIO_B, BIT22);
-	GPIO_setPIN(GPIO_C, BIT26);
+	GPIO_setPIN(GPIO_E, BIT26);
 }
 
-void delay(uint32 delay){
-	volatile uint32 counter;
 
-	for(counter=delay;counter>0;counter--){
-	}
-}
 
 void Green(void){
-		//LEDS OFF
-		GPIOB->PDOR |= 0x00600000;
-		GPIOE->PDOR |= 0x04000000;
-		delay(W);
-		//LED OFF
-		GPIOE->PDOR |= 0x04000000;
-		delay(W);
-		//LED ON
-		GPIOE->PDOR &= ~(0x04000000);
-		delay(K);
+	/**Leds Off**/
+	GPIO_setPIN(GPIO_B, BIT21);
+	GPIO_setPIN(GPIO_B, BIT22);
+	GPIO_setPIN(GPIO_E, BIT26);
+	//PIT_delay(PIT_0,SYSTEM_CLOCK,DELAY_SHORT);
+
+	/**Led On **/
+	GPIO_clearPIN(GPIO_E, BIT26);
+	//PIT_delay(PIT_0,SYSTEM_CLOCK,DELAY_LONG);
 
 }
 void Blue(void){
-		//LEDS OFF
-		GPIOB->PDOR |= 0x00600000;
-		GPIOE->PDOR |= 0x04000000;
-		delay(W);
-		//LED OFF
-		GPIOB->PDOR |= 0x00200000;
-		delay(W);
-		//LED ON
-		GPIOB->PDOR &= ~(0x00200000);
-		delay(K);
+	/**Leds Off**/
+	GPIO_setPIN(GPIO_B, BIT21);
+	GPIO_setPIN(GPIO_B, BIT22);
+	GPIO_setPIN(GPIO_E, BIT26);
+	/**Led On **/
+	GPIO_clearPIN(GPIO_B, BIT21);
 
 
 }
 void Red(void){
-		//LEDS OFF
-		GPIOB->PDOR |= 0x00600000;
-		GPIOE->PDOR |= 0x04000000;
-		delay(W);
-		//LED OFF
-		GPIOB->PDOR |= 0x00400000;
-		delay(W);
-		//LED ON
-		GPIOB->PDOR &= ~(0x00400000);
-		delay(K);
+	/**Leds Off**/
+	GPIO_setPIN(GPIO_B, BIT21);
+	GPIO_setPIN(GPIO_B, BIT22);
+	GPIO_setPIN(GPIO_E, BIT26);
+	//PIT_delay(PIT_0,SYSTEM_CLOCK,DELAY_SHORT);
 
+	/**Led On **/
+	GPIO_clearPIN(GPIO_B, BIT22);
+	//PIT_delay(PIT_0,SYSTEM_CLOCK,DELAY_LONG);
 }
 void Purple(void){
-		//LEDS OFF
-		GPIOB->PDOR |= 0x00600000;
-		GPIOE->PDOR |= 0x04000000;
-		delay(W);
-		//LED OFF
-		GPIOB->PDOR |= 0x00400000;
-		GPIOB->PDOR |= 0x00200000;
-		delay(W);
-		//LED ON
-		GPIOB->PDOR &= ~(0x00400000);
-		GPIOB->PDOR &= ~(0x00200000);
-		delay(K);
+	/**Leds Off**/
+	GPIO_setPIN(GPIO_B, BIT21);
+	GPIO_setPIN(GPIO_B, BIT22);
+	GPIO_setPIN(GPIO_E, BIT26);
 
+	/**Led On **/
+	GPIO_clearPIN(GPIO_B, BIT21);
+	GPIO_clearPIN(GPIO_B, BIT22);
+	//PIT_delay(PIT_0,SYSTEM_CLOCK,DELAY_LONG);
 }
 void White(void){
-		//LEDS OFF
-		GPIOB->PDOR |= 0x00600000;
-		GPIOE->PDOR |= 0x04000000;
-		delay(W);
-		//LED OFF
-		GPIOB->PDOR |= 0x00400000;
-		GPIOB->PDOR |= 0x00200000;
-		GPIOE->PDOR |= 0x04000000;
+	/**Leds Off**/
+	GPIO_setPIN(GPIO_B, BIT21);
+	GPIO_setPIN(GPIO_B, BIT22);
+	GPIO_setPIN(GPIO_E, BIT26);
+	//PIT_delay(PIT_0,SYSTEM_CLOCK,DELAY_SHORT);
 
-		delay(W);
-		//LED ON
-		GPIOB->PDOR &= ~(0x00400000);
-		GPIOB->PDOR &= ~(0x00200000);
-		GPIOE->PDOR &= ~(0x04000000);
-		delay(K);
+	/**Led On **/
+	GPIO_clearPIN(GPIO_B, BIT21);
+	GPIO_clearPIN(GPIO_B, BIT22);
+	GPIO_clearPIN(GPIO_E, BIT26);
+	//PIT_delay(PIT_0,SYSTEM_CLOCK,DELAY_LONG);
+
 }
 void Yellow(void){
-		//LEDS OFF
-		GPIOB->PDOR |= 0x00600000;
-		GPIOE->PDOR |= 0x04000000;
-		delay(W);
-		//LED OFF
-		GPIOB->PDOR |= 0x00400000;
-		GPIOE->PDOR |= 0x04000000;
+	/**Leds Off**/
+	GPIO_setPIN(GPIO_B, BIT21);
+	GPIO_setPIN(GPIO_B, BIT22);
+	GPIO_setPIN(GPIO_E, BIT26);
+	//PIT_delay(PIT_0,SYSTEM_CLOCK,DELAY_SHORT);
 
-		delay(W);
-		//LED ON
-		GPIOB->PDOR &= ~(0x00400000);
-		GPIOE->PDOR &= ~(0x04000000);
-		delay(K);
+	/**Led On **/
+	GPIO_clearPIN(GPIO_B, BIT22);
+	GPIO_clearPIN(GPIO_E, BIT26);
+	//PIT_delay(PIT_0,SYSTEM_CLOCK,DELAY_LONG);
 }

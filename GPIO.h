@@ -225,7 +225,7 @@ void GPIO_writePORT(GPIO_portNameType portName, uint8 data);
  	\param[in] pin Pin to be set.
  	\return void
  */
-uint32 GPIO_setPIN(GPIO_portNameType portName, uint8 pin);
+void GPIO_setPIN(GPIO_portNameType portName, uint8 pin);
 /********************************************************************************************/
 /********************************************************************************************/
 /********************************************************************************************/
@@ -235,7 +235,7 @@ uint32 GPIO_setPIN(GPIO_portNameType portName, uint8 pin);
  	 \param[in] pin Pin to be clear.
  	 \return void
  */
-uint32 GPIO_clearPIN(GPIO_portNameType portName, uint8 pin);
+void GPIO_clearPIN(GPIO_portNameType portName, uint8 pin);
 /********************************************************************************************/
 /********************************************************************************************/
 /********************************************************************************************/
@@ -246,11 +246,37 @@ uint32 GPIO_clearPIN(GPIO_portNameType portName, uint8 pin);
  	 \return void
  */
 
+/********************************************************************************************/
+/********************************************************************************************/
+/********************************************************************************************/
+/*!
+ 	 \brief	 This function read all interrupts that were sensed by the GPIO.
+
+ 	 \param[in]  portName Port to read interrupts.
+ 	 \return the value of the Interrupter
+ 	 \todo Implement a mechanism to read the interrupts by a specific pin.
+ */
 uint32 GPIO_readInterrupt(GPIO_portNameType portName);
 
+/********************************************************************************************/
+/********************************************************************************************/
+/********************************************************************************************/
+/*!
+ 	\brief This toogle an specific pin in a GPIO port.
+ 	\param[in] portName Port to be selected.
+ 	\param[in] pin Pin to be set.
+ 	\return void
+ */
 void GPIO_tooglePIN(GPIO_portNameType portName, uint8 pin);
 
-
+/********************************************************************************************/
+/********************************************************************************************/
+/********************************************************************************************/
+/*!
+ 	\brief This decode the value of real Pin.
+ 	\param[in] bit to Decode
+ 	\return the value of the real PINs
+ */
 uint32 valuePIN(BitsType bit);
 
 #endif /* GPIO_H_ */

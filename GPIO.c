@@ -11,14 +11,24 @@
  */
 #include "MK64F12.h"
 #include "GPIO.h"
+#include "Keyboard.h"
+#include <stdio.h>
 #include "Colors.h"
+#include "PIT.h"
+#include "DataTypeDefinitions.h"
+#define SYSTEM_CLOCK 21000000
+#define DELAY 0.01F
 
 static GPIO_interruptFlags_t GPIO_intrStatusFlag;
+uint8 counter_PassW = 0;
+uint8 ctrl=0;
+extern flag_Process;
 
+/**This function returns the real value of selecting PIN**/
 uint32 valuePIN(uint8 bit){
+	/**Value of 1 to  **/
 	uint8 temp = 1;
 	uint32 value;
-
 	if(bit>32){
 		return FALSE;
 	}else{
@@ -27,23 +37,35 @@ uint32 valuePIN(uint8 bit){
 	}
 }
 
-void PORTB_IRQHandler()
-{
-	GPIO_intrStatusFlag.flagPortB  = TRUE;
-	GPIO_clearInterrupt(GPIO_B);
-}
-
 void PORTC_IRQHandler()
 {
-	GPIO_intrStatusFlag.flagPortC  = TRUE;
-	GPIO_readInterrupt(GPIO_C);
-	if(GPIO_readInterrupt(GPIO_C) == 1<<8){
-		Blue();
+	uint32 i;
+	if((GPIO_readInterrupt(GPIO_C)==COLUMN_1)||(GPIO_readInterrupt(GPIO_C)==COLUMN_2)||(GPIO_readInterrupt(GPIO_C)==COLUMN_3)|| (GPIO_readInterrupt(GPIO_C)==COLUMN_3)){
+		GPIO_intrStatusFlag.flagPortC  = TRUE;
+		GPIO_readInterrupt(GPIO_C);
+		scanKeyPad(GPIO_readInterrupt(GPIO_C));
+		counter_PassW++;
+		/*if((PIT_getIntrStutus0()==TRUE)&&ctrl==0){
+		PIT_delay(PIT_0,60000000,.75);
+			ctrl=1;
+		}
+		if(PIT_getIntrStutus0()==TRUE){
+			GPIO_clearPIN(GPIO_B,BIT19);
+			PIT_clearSelect(PIT_0);
+			ctrl=0;
+		}*/
+		for(int i=1000000;i>0;i--){
+
+		}
+		GPIO_clearInterrupt(GPIO_C);
+	}else{
+		//i = 0;
+	//	flag_Process = PROCESS;
+		GPIO_intrStatusFlag.flagPortC  = TRUE;
+
+		GPIO_clearInterrupt(GPIO_C);
+
 	}
-	if(GPIO_readInterrupt(GPIO_C) == 1<<1){
-		Red();
-	}
-	GPIO_clearInterrupt(GPIO_C);
 
 }
 
@@ -204,7 +226,6 @@ uint8 GPIO_pinControlRegister(GPIO_portNameType portName,uint8 pin,const GPIO_pi
 }
 
 void GPIO_writePORT(GPIO_portNameType portName, uint8 Data){
-	uint32 value = 0;
 	uint32 realData;
 
 	realData = valuePIN(Data);
@@ -264,34 +285,30 @@ uint32 GPIO_readPIN(GPIO_portNameType portName, uint8 pin){
 	case GPIO_A:
 		value = GPIOA->PDIR;
 		value |= realPin;
-		return value;
 		break;
 	case GPIO_B:
 		value = GPIOB->PDIR;
 		value |= realPin;
-		return value;
 		break;
 	case GPIO_C:
 		value = GPIOC->PDIR;
 		value |= realPin;
-		return value;
 		break;
 	case GPIO_D:
 		value = GPIOD->PDIR;
 		value |= realPin;
-		return value;
 		break;
 	case GPIO_E:
 		value = GPIOE->PDIR;
 		value |= realPin;
-		return value;
 		break;
 	default:
 		break;
 	}
+	return value;
 
 }
-uint32 GPIO_setPIN(GPIO_portNameType portName, uint8 pin){
+void GPIO_setPIN(GPIO_portNameType portName, uint8 pin){
 	uint32 realPin;
 	uint32 value = 0;
 
@@ -301,63 +318,47 @@ uint32 GPIO_setPIN(GPIO_portNameType portName, uint8 pin){
 	case GPIO_A:
 		GPIOA->PSOR |= realPin;
 		value = GPIOA->PSOR;
-		return value;
 		break;
 	case GPIO_B:
 		GPIOB->PSOR |= realPin;
 		value = GPIOB->PSOR;
-		return value;
 		break;
 	case GPIO_C:
 		GPIOC->PSOR |= realPin;
 		value = GPIOC->PSOR;
-		return value;
 		break;
 	case GPIO_D:
 		GPIOD->PSOR |= realPin;
 		value = GPIOD->PSOR;
-		return value;
 		break;
 	case GPIO_E:
 		GPIOE->PSOR |= realPin;
 		value = GPIOE->PSOR;
-		return value;
 		break;
 	default:
 		break;
 	}
 }
-uint32 GPIO_clearPIN(GPIO_portNameType portName, uint8 pin){
+void GPIO_clearPIN(GPIO_portNameType portName, uint8 pin){
 	uint32 realPin;
-	uint32 value = 0;
 
 	realPin = valuePIN(pin);
 
 	switch(portName){
 	case GPIO_A:
 		GPIOA->PCOR |= realPin;
-		value = GPIOA->PCOR;
-		return value;
 		break;
 	case GPIO_B:
 		GPIOB->PCOR |= realPin;
-		value = GPIOB->PCOR;
-		return value;
 		break;
 	case GPIO_C:
 		GPIOC->PCOR |= realPin;
-		value = GPIOC->PCOR;
-		return value;
 		break;
 	case GPIO_D:
 		GPIOD->PCOR |= realPin;
-		value = GPIOD->PCOR;
-		return value;
 		break;
 	case GPIO_E:
 		GPIOE->PCOR |= realPin;
-		value = GPIOE->PCOR;
-		return value;
 		break;
 	default:
 		break;
@@ -393,7 +394,6 @@ void GPIO_tooglePIN(GPIO_portNameType portName, uint8 pin){
 void GPIO_dataDirectionPORT(GPIO_portNameType portName ,uint32 direction);
 void GPIO_dataDirectionPIN(GPIO_portNameType portName, uint8 State, uint8 pin){
 	uint32 realPin;
-	uint32 tempFlag = 0;
 	realPin = valuePIN(pin);
 
 	switch(State){
@@ -401,15 +401,12 @@ void GPIO_dataDirectionPIN(GPIO_portNameType portName, uint8 State, uint8 pin){
 		switch(portName){
 		case GPIO_A:
 			GPIOA->PDDR &= ~(realPin);
-			tempFlag = GPIOA->PDDR;
 			break;
 		case GPIO_B:
 			GPIOB->PDDR &= ~(realPin);
-			tempFlag = GPIOB->PDDR;
 			break;
 		case GPIO_C:
 			GPIOC->PDDR &= ~(realPin);
-			tempFlag = GPIOC->PDDR;
 			break;
 		case GPIO_D:
 			GPIOD->PDDR &= ~(realPin);
